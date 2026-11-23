@@ -19,7 +19,7 @@
 <meta property="og:image" content="https://striatix.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Striatix wordmark on white with a red hairline rule">
+<meta property="og:image:alt" content="Striatix wordmark on white with a forest-green hairline rule">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Striatix - 7-in-1 cognitive drink, $1.67 a serving">
 <meta name="twitter:description" content="A 7-in-1 cognitive drink at full dose. $1.67 a serving, every dose printed.">
@@ -936,9 +936,10 @@ footer{scrollbar-color:rgba(255,255,255,.3) transparent}
       <p class="eyebrow">Early access</p>
       <h2>Be first in <span>line</span></h2>
       <p class="lead">Striatix is launching soon. Join the waitlist for early access.</p>
-      <form id="form" action="https://striatix.us21.list-manage.com/subscribe/post?u=REPLACE_WITH_LIST_UUID&amp;id=REPLACE_WITH_AUDIENCE_ID" method="post" target="_blank" novalidate>
-        <input type="email" id="email" name="EMAIL" placeholder="you@email.com" aria-label="Email address" autocomplete="email" required>
-        <div aria-hidden="true" style="position:absolute;left:-5000px"><input type="text" name="b_REPLACE_WITH_LIST_UUID_REPLACE_WITH_AUDIENCE_ID" tabindex="-1" value=""></div>
+      <form id="form" method="post" novalidate>
+        <input type="email" id="email" name="email" placeholder="you@email.com" aria-label="Email address" autocomplete="email" required>
+        <div aria-hidden="true" style="position:absolute;left:-5000px"><input type="text" name="website" tabindex="-1" autocomplete="off" value=""></div>
+        <input type="hidden" id="planInterest" name="plan_interest" value="">
         <button class="btn" type="submit">Join Waitlist</button>
       </form>
       <div id="msg" role="status" aria-live="polite"></div>
@@ -1869,32 +1870,55 @@ footer{scrollbar-color:rgba(255,255,255,.3) transparent}
   });});
   cards.forEach(function(c,i){c.addEventListener('click',function(){if(!reduce)goTo(el.stack,i/(cards.length-1));});});
 
-  /* waitlist: posts to the list service when one is configured, and keeps a
-     local record either way so no signup is ever silently lost */
-  var WL_ENDPOINT='https://striatix.us21.list-manage.com/subscribe/post?u=REPLACE_WITH_LIST_UUID&id=REPLACE_WITH_AUDIENCE_ID';
-  var WL_LIVE=WL_ENDPOINT.indexOf('REPLACE_WITH')===-1;
-  var wlForm=$('#form'), wlMsg=$('#msg'), wlBtn=wlForm.querySelector('button[type=submit]');
-  function wlSave(v){
-    try{var list=JSON.parse(localStorage.getItem('waitlist')||'[]');if(list.indexOf(v)===-1)list.push(v);localStorage.setItem('waitlist',JSON.stringify(list));}catch(err){}
-  }
+  /* waitlist: posts to our own endpoint (/api/waitlist, Cloudflare Pages Function + D1).
+     Success is shown only when the server confirms it; every failure shows a real error. */
+  var wlForm=$('#form'), wlMsg=$('#msg'), wlBtn=wlForm.querySelector('button[type=submit]'),
+      wlEmail=$('#email'), wlPlan=$('#planInterest'), wlTrap=wlForm.querySelector('input[name=website]'),
+      wlShownAt=Date.now(), WL_DONE='striatix_wl_done';
+  var WL_OK="You're on the list.";
+  var WL_ERR={
+    invalid_email:"That email doesn't look right. Check it and try again.",
+    rate_limited:"Too many attempts. Try again in a few minutes.",
+    server_error:"Something went wrong on our end. Try again, or email us at striatixsupps@gmail.com.",
+    network:"We couldn't reach the server. Check your connection and try again."
+  };
+  function wlSay(text,isErr){wlMsg.className=isErr?'err':'';wlMsg.textContent=text;}
+  /* Older builds kept typed emails in localStorage ('waitlist'). Remove them: we never keep the address. */
+  try{localStorage.removeItem('waitlist');}catch(err){}
+  /* Someone who already signed up on this browser sees the confirmation, not the form again. */
+  try{if(localStorage.getItem(WL_DONE)==='1'){wlForm.style.display='none';wlSay(WL_OK,false);}}catch(err){}
+
+  /* The plan buttons all point at #waitlist; remember which card the visitor came from. */
+  $$('[data-plan] .btn').forEach(function(btn){
+    btn.addEventListener('click',function(){wlPlan.value=btn.closest('[data-plan]').dataset.plan;});
+  });
+
   wlForm.addEventListener('submit',function(e){
     e.preventDefault();
-    var v=($('#email').value||'').trim();
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)){wlMsg.className='err';wlMsg.textContent='Please enter a valid email address.';return;}
-    wlSave(v);
-    if(!WL_LIVE){
-      wlMsg.className='';wlMsg.textContent="You're on the list. We'll be in touch.";
-      wlForm.reset();return;
-    }
-    wlBtn.disabled=true;wlMsg.className='';wlMsg.textContent='Adding you to the list...';
-    var body=new FormData(wlForm);
-    fetch(WL_ENDPOINT,{method:'POST',body:body,mode:'no-cors'}).then(function(){
-      wlMsg.textContent="You're on the list. We'll be in touch.";
-      wlForm.reset();
-    }).catch(function(){
-      wlMsg.textContent="You're on the list. We'll be in touch.";
-      wlForm.reset();
-    }).then(function(){wlBtn.disabled=false;});
+    if(wlBtn.disabled) return;
+    var v=(wlEmail.value||'').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)){wlSay(WL_ERR.invalid_email,true);wlEmail.focus();return;}
+    var q=new URLSearchParams(location.search);
+    var payload={
+      email:v, source:'section', plan_interest:wlPlan.value||null, website:wlTrap?wlTrap.value:'',
+      elapsed_ms:Date.now()-wlShownAt, page_path:location.pathname, referrer:document.referrer||null,
+      utm_source:q.get('utm_source'), utm_medium:q.get('utm_medium'), utm_campaign:q.get('utm_campaign')
+    };
+    wlBtn.disabled=true;wlSay('Adding you to the list...',false);
+    fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(res){
+        return res.json().catch(function(){return {ok:false,error:'server_error'};});
+      })
+      .then(function(data){
+        if(data&&data.ok){
+          wlSay(WL_OK,false);
+          wlEmail.value='';
+          try{localStorage.setItem(WL_DONE,'1');}catch(err){}
+        }else{
+          wlSay(WL_ERR[data&&data.error]||WL_ERR.server_error,true);
+        }
+      }, function(){ wlSay(WL_ERR.network,true); })
+      .then(function(){wlBtn.disabled=false;});
   });
 })();
 </script>
