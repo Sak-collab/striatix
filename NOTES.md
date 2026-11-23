@@ -4,8 +4,8 @@ Things noticed while building the waitlist backend. Each needs a decision or a s
 
 ## Needs the owner's answer
 
-1. **Two contact addresses.** The footer links to `hello@striatix.com`; the brief and every email use `striatixsupps@gmail.com`. As of 2026-11-23, `striatix.com` has **no DNS records and no MX records**, so mail to `hello@striatix.com` currently goes nowhere. The footer has not been changed. Which address is real?
-2. **Sending domain.** Transactional email can't be sent *From* a `@gmail.com` address (no provider can verify gmail.com, and Gmail's DMARC would fail it). Sending needs a domain you control with SPF, DKIM and DMARC set up in Resend. `striatix.com` is the obvious one, but it isn't resolving yet.
+1. ~~**Two contact addresses.**~~ Resolved 2026-11-23: the owner confirmed `striatixsupps@gmail.com` is the real contact address; the footer now links to it. (`striatix.com` had no DNS or MX records, so `hello@striatix.com` reached nobody.)
+2. **Sending domain.** Decided 2026-11-23: emails will be sent From an address on `striatix.com` (Gmail stays as Reply-To). Blocked until the domain resolves and is verified in Resend (SPF, DKIM, DMARC). Until `EMAIL_FROM` is set, signups are stored but no emails go out.
 3. **Where the site is actually hosted.** The README said "Live at https://sak-collab.github.io/striatix/" (GitHub Pages). The brief says Cloudflare Pages. GitHub Pages can't run the API, so the backend needs Cloudflare Pages.
 
 ## Bugs / risks in the page

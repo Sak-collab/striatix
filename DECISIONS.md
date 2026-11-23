@@ -22,7 +22,8 @@ One line of reasoning per decision. Newest at the bottom of each section.
 
 - **The form keeps `method="post"`.** The brief says to remove it. Without it, a submit when JavaScript fails would become a GET that puts the visitor's email in the URL and in server logs. Mailchimp's `action` and `target="_blank"` are removed as asked.
 - **The CSV export adds an `unsubscribed` column** after the brief's eight. Without it, the export would hand back people who asked not to be emailed.
-- **`EMAIL_FROM` is not `striatixsupps@gmail.com`.** Resend, Postmark and SendGrid all require the From domain to be one you've verified, and nobody can verify `gmail.com`. The From must be an address on a domain you own (for example `hello@striatix.com`), with Gmail kept as Reply-To. `EMAIL_FROM` is left empty in `.env.example` until that's decided. See NOTES.md.
+- **`EMAIL_FROM` is not `striatixsupps@gmail.com`.** Resend, Postmark and SendGrid all require the From domain to be one you've verified, and nobody can verify `gmail.com`. Owner's decision (2026-11-23): send From an address on `striatix.com` (suggested: `waitlist@striatix.com`), display name "Striatix Supplements", with `striatixsupps@gmail.com` as Reply-To.
+- **Contact address is `striatixsupps@gmail.com`** (owner's decision, 2026-11-23). The footer link was changed from `hello@striatix.com` to match the emails and error messages.
 - **A network failure gets its own message** ("We couldn't reach the server. Check your connection and try again.") in addition to the three mapped API errors, because a dropped connection never reaches the API to get one.
 - **`source` is always `section`** for now: the page has one form. `footer` is accepted by the API for when a second form exists.
 
