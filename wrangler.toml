@@ -1,0 +1,22 @@
+# Cloudflare Pages project: static site in ./public, API in ./functions, data in D1.
+name = "striatix"
+pages_build_output_dir = "./public"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGIN = "https://striatix.com"
+PUBLIC_BASE_URL = "https://striatix.com"
+EMAIL_FROM_NAME = "Striatix Supplements"
+EMAIL_REPLY_TO = "striatixsupps@gmail.com"
+NOTIFY_TO = "striatixsupps@gmail.com"
+NOTIFY_TIMEZONE = "UTC"
+
+# Create the database once with `npx wrangler d1 create striatix`, then paste the id it
+# prints below. Local development (`npm run dev`, `npm test`) does not need a real id.
+[[d1_databases]]
+binding = "DB"
+database_name = "striatix"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

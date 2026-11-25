@@ -1,0 +1,21 @@
+{
+  "name": "striatix",
+  "private": true,
+  "description": "striatix.com: static site on Cloudflare Pages, waitlist backend in Pages Functions + D1.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev",
+    "migrate": "wrangler d1 migrations apply striatix --local",
+    "migrate:remote": "wrangler d1 migrations apply striatix --remote",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:site": "node scripts/check-site.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.9.1",
+    "@cloudflare/workers-types": "^5.20261123.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.167.0"
+  }
+}

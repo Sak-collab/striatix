@@ -1,0 +1,23 @@
+# Companion Worker for the owner digest. Deploy with:
+#   npx wrangler deploy --config workers/digest/wrangler.toml
+# Secrets it needs (set once): EMAIL_PROVIDER_API_KEY, EMAIL_FROM
+#   npx wrangler secret put EMAIL_PROVIDER_API_KEY --config workers/digest/wrangler.toml
+name = "striatix-digest"
+main = "index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+EMAIL_FROM_NAME = "Striatix Supplements"
+EMAIL_REPLY_TO = "striatixsupps@gmail.com"
+NOTIFY_TO = "striatixsupps@gmail.com"
+NOTIFY_TIMEZONE = "UTC"
+
+# Same database as the Pages project (use the same database_id).
+[[d1_databases]]
+binding = "DB"
+database_name = "striatix"
+database_id = "00000000-0000-0000-0000-000000000000"
